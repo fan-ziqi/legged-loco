@@ -26,11 +26,11 @@ extra_standard_library = [
     "git",
 ]
 # Imports from this repository
-known_first_party = "rsl_rl"
+known_first_party = "rsl_rl_leggedloco"
 
 [tool.pyright]
 
-include = ["rsl_rl"]
+include = ["rsl_rl_leggedloco"]
 
 typeCheckingMode = "basic"
 pythonVersion = "3.7"

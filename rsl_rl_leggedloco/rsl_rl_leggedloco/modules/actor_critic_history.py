@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 from torch.distributions import Normal
 
-from rsl_rl.modules.actor_critic import get_activation
+from rsl_rl_leggedloco.modules.actor_critic import get_activation
 
 
 class ActorHistory(nn.Module):
@@ -34,7 +34,7 @@ class ActorHistory(nn.Module):
         # x is of shape (batch_size, history_len, num_single_observations)
         x = x.view(*x.shape[:-2], -1)
         return self.model(x)
-    
+
 
 class CriticHistory(nn.Module):
     def __init__(
@@ -62,11 +62,11 @@ class CriticHistory(nn.Module):
         # x is of shape (batch_size, history_len, num_single_observations)
         x = x.view(*x.shape[:-2], -1)
         return self.model(x)
-    
+
 
 class ActorCriticHistory(nn.Module):
     is_recurrent = False
-    
+
     def __init__(
         self,
         num_actor_obs,
@@ -106,7 +106,7 @@ class ActorCriticHistory(nn.Module):
         self.distribution = None
         # disable args validation for speedup
         Normal.set_default_validate_args = False
-    
+
     def reset(self, dones=None):
         pass
 
