@@ -4,19 +4,19 @@ import torch
 import torch.nn as nn
 from torch.distributions import Normal
 
-from rsl_rl.modules.actor_critic import get_activation
-from rsl_rl.modules.depth_backbone import DepthOnlyFCBackbone, DepthBackbone
-from rsl_rl.modules.actor_critic_recurrent import Memory
-from rsl_rl.utils import unpad_trajectories
+from rsl_rl_leggedloco.modules.actor_critic import get_activation
+from rsl_rl_leggedloco.modules.depth_backbone import DepthOnlyFCBackbone, DepthBackbone
+from rsl_rl_leggedloco.modules.actor_critic_recurrent import Memory
+from rsl_rl_leggedloco.utils import unpad_trajectories
 
 
 class ActorDepthCNN(nn.Module):
-    def __init__(self, 
-                 num_obs_proprio, 
-                 obs_depth_shape, 
+    def __init__(self,
+                 num_obs_proprio,
+                 obs_depth_shape,
                  num_actions,
                  activation,
-                 hidden_dims=[256, 256, 128], 
+                 hidden_dims=[256, 256, 128],
         ):
         super().__init__()
 
@@ -46,7 +46,7 @@ class ActorDepthCNN(nn.Module):
 
         self.num_obs_proprio = num_obs_proprio
         self.obs_depth_shape = obs_depth_shape
-    
+
     def forward(self, x):
         prop_input = x[..., :self.num_obs_proprio]
         prop_latent = self.prop_mlp(prop_input)
@@ -58,10 +58,10 @@ class ActorDepthCNN(nn.Module):
 
         actions = self.action_head(torch.cat((prop_latent, depth_latent), dim=-1))
         return actions
-    
+
     def encode(self, observations):
         original_shape = observations.shape
-        
+
         if observations.dim() == 3:
             observations = observations.reshape(-1, original_shape[-1])
 
@@ -74,16 +74,16 @@ class ActorDepthCNN(nn.Module):
 
         if len(original_shape) == 3:
             return torch.cat((prop_latent, depth_latent), dim=-1).reshape(*original_shape[:-1], -1)
-        
+
         return torch.cat((prop_latent, depth_latent), dim=-1)
-    
+
     def reset(self, dones=None):
         self.depth_backbone.reset(dones)
 
 
 class ActorCriticDepthCNN(nn.Module):
     is_recurrent = False
-    
+
     def __init__(
         self,
         num_actor_obs,
@@ -107,7 +107,7 @@ class ActorCriticDepthCNN(nn.Module):
 
         # Policy Function
         self.actor = ActorDepthCNN(num_actor_obs_prop, obs_depth_shape, num_actions, activation, actor_hidden_dims)
-        
+
         # Value function
         critic_layers = []
         critic_layers.append(nn.Linear(mlp_input_dim_c, critic_hidden_dims[0]))
@@ -128,7 +128,7 @@ class ActorCriticDepthCNN(nn.Module):
         self.distribution = None
         # disable args validation for speedup
         Normal.set_default_validate_args = False
-    
+
     def reset(self, dones=None):
         pass
 
@@ -170,17 +170,17 @@ class ActorCriticDepthCNN(nn.Module):
         mean = self.actor.action_head(hidden_states)
         self.distribution = Normal(mean, mean * 0.0 + self.std)
         return self.distribution.sample()
-    
+
     def act_hidden_inference(self, hidden_states):
         actions_mean = self.actor.action_head(hidden_states)
         return actions_mean
-    
+
     def evaluate_hidden(self, hidden_states):
         return self.critic.value_head(hidden_states)
-    
+
     def get_hidden_states(self):
         return self.actor.depth_backbone.hidden_states, self.actor.depth_backbone.hidden_states
-    
+
 
 
 class ActorCriticDepthCNNRecurrent(ActorCriticDepthCNN):
@@ -249,4 +249,3 @@ class ActorCriticDepthCNNRecurrent(ActorCriticDepthCNN):
 
     def get_hidden_states(self):
         return self.memory_a.hidden_states, self.memory_c.hidden_states
-    

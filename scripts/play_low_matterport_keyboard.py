@@ -46,7 +46,7 @@ simulation_app = app_launcher.app
 
 """Rest everything follows."""
 
-from rsl_rl.runners import OnPolicyRunner
+from rsl_rl_leggedloco.runners import OnPolicyRunner
 
 import omni.isaac.lab_tasks  # noqa: F401
 from omni.isaac.lab_tasks.utils import get_checkpoint_path, parse_env_cfg

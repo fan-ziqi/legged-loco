@@ -7,8 +7,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from rsl_rl.modules import ActorCritic, ActorCriticDepthCNN
-from rsl_rl.storage import RolloutStorage
+from rsl_rl_leggedloco.modules import ActorCritic, ActorCriticDepthCNN
+from rsl_rl_leggedloco.storage import RolloutStorage
 
 
 class PPO:

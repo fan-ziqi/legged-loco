@@ -11,13 +11,13 @@ from collections import deque
 from torch.utils.tensorboard import SummaryWriter as TensorboardSummaryWriter
 
 import rsl_rl
-from rsl_rl.algorithms import PPO
-from rsl_rl.env import VecEnv
-from rsl_rl.modules import ActorCritic, ActorCriticRecurrent, ActorCriticDepthCNN, ActorCriticDepthCNNRecurrent, EmpiricalNormalization
-from rsl_rl.utils import store_code_state
+from rsl_rl_leggedloco.algorithms import PPO
+from rsl_rl_leggedloco.env import VecEnv
+from rsl_rl_leggedloco.modules import ActorCritic, ActorCriticHistory, EmpiricalNormalization
+from rsl_rl_leggedloco.utils import store_code_state
 
 
-class OnPolicyRunner:
+class OnPolicyRunnerHistory:
     """On-policy runner for training and evaluation."""
 
     def __init__(self, env: VecEnv, train_cfg, log_dir=None, device="cpu"):
@@ -33,22 +33,11 @@ class OnPolicyRunner:
         else:
             num_critic_obs = num_obs
 
-        if self.cfg.get("use_cnn", False):
-            num_actor_obs_prop = self.env.unwrapped.observation_manager.compute_group("proprio").shape[1]
-            self.policy_cfg["num_actor_obs_prop"] = num_actor_obs_prop * (self.policy_cfg.get("history_length", 0) + 1)
-        
         actor_critic_class = eval(self.policy_cfg.pop("class_name"))  # ActorCritic
-        actor_critic: ActorCritic | ActorCriticRecurrent | ActorCriticDepthCNN | ActorCriticDepthCNNRecurrent = actor_critic_class(
+        actor_critic: ActorCritic | ActorCriticHistory = actor_critic_class(
             num_obs, num_critic_obs, self.env.num_actions, **self.policy_cfg
         ).to(self.device)
-        # if not self.cfg.get("use_cnn", False):
-        #     actor_critic: ActorCritic | ActorCriticRecurrent = actor_critic_class(
-        #         num_obs, num_critic_obs, self.env.num_actions, **self.policy_cfg
-        #     ).to(self.device)
-        # else:
-        #     actor_critic: ActorCriticDepthCNN | Ac = ActorCriticDepthCNN(
-        #         num_obs, num_critic_obs, self.env.num_actions, **self.policy_cfg
-        #     ).to(self.device)
+
         alg_class = eval(self.alg_cfg.pop("class_name"))  # PPO
         self.alg: PPO = alg_class(actor_critic, device=self.device, **self.alg_cfg)
         self.num_steps_per_env = self.cfg["num_steps_per_env"]
@@ -85,12 +74,12 @@ class OnPolicyRunner:
             self.logger_type = self.logger_type.lower()
 
             if self.logger_type == "neptune":
-                from rsl_rl.utils.neptune_utils import NeptuneSummaryWriter
+                from rsl_rl_leggedloco.utils.neptune_utils import NeptuneSummaryWriter
 
                 self.writer = NeptuneSummaryWriter(log_dir=self.log_dir, flush_secs=10, cfg=self.cfg)
                 self.writer.log_config(self.env.cfg, self.cfg, self.alg_cfg, self.policy_cfg)
             elif self.logger_type == "wandb":
-                from rsl_rl.utils.wandb_utils import WandbSummaryWriter
+                from rsl_rl_leggedloco.utils.wandb_utils import WandbSummaryWriter
 
                 self.writer = WandbSummaryWriter(log_dir=self.log_dir, flush_secs=10, cfg=self.cfg)
                 self.writer.log_config(self.env.cfg, self.cfg, self.alg_cfg, self.policy_cfg)
@@ -124,9 +113,6 @@ class OnPolicyRunner:
                     actions = self.alg.act(obs, critic_obs)
                     obs, rewards, dones, infos = self.env.step(actions)
                     obs = self.obs_normalizer(obs)
-                    # IMPORTANT!! clip total rewards to avoid early termination
-                    rewards = torch.clamp(rewards, min=-5.0)
-                    
                     if "critic" in infos["observations"]:
                         critic_obs = self.critic_obs_normalizer(infos["observations"]["critic"])
                     else:

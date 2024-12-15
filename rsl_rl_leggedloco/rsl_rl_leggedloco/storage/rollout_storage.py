@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import torch
 
-from rsl_rl.utils import split_and_pad_trajectories
+from rsl_rl_leggedloco.utils import split_and_pad_trajectories
 
 
 class RolloutStorage:

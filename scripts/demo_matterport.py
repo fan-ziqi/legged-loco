@@ -48,7 +48,7 @@ from omni.isaac.lab.markers.config import CUBOID_MARKER_CFG
 from omni.isaac.lab.markers import VisualizationMarkers
 import omni.isaac.lab.utils.math as math_utils
 
-from rsl_rl.runners import OnPolicyRunner
+from rsl_rl_leggedloco.runners import OnPolicyRunner
 from omni.isaac.lab_tasks.utils import get_checkpoint_path, parse_env_cfg
 from omni.isaac.lab_tasks.utils.wrappers.rsl_rl import (
     RslRlOnPolicyRunnerCfg,

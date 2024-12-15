@@ -50,7 +50,7 @@ import math
 import torch
 import imageio
 
-from rsl_rl.runners import OnPolicyRunner
+from rsl_rl_leggedloco.runners import OnPolicyRunner
 
 from omni.isaac.lab.envs import ManagerBasedRLEnvCfg
 from omni.isaac.lab.utils.io import load_yaml
