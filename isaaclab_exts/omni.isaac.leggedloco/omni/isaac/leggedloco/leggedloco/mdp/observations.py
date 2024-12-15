@@ -21,7 +21,7 @@ import torch.nn.functional as F
 from omni.isaac.lab.managers import SceneEntityCfg
 from omni.isaac.lab.sensors import RayCaster
 from omni.isaac.lab.sensors.camera import CameraData
-from omni.isaac.lab.sensors.camera.utils import convert_orientation_convention
+from omni.isaac.lab.utils.math import convert_camera_frame_orientation_convention
 import omni.isaac.lab.utils.math as math_utils
 from omni.isaac.lab.assets import Articulation, RigidObject
 
@@ -173,7 +173,7 @@ def cam_orientation_ros(env: BaseEnv, sensor_cfg: SceneEntityCfg) -> torch.Tenso
     """Orientation of the camera."""
     # extract the used quantities (to enable type-hinting)
     sensor: CameraData = env.scene.sensors[sensor_cfg.name].data
-    return convert_orientation_convention(sensor.quat_w_world, origin="world", target="ros")
+    return convert_camera_frame_orientation_convention(sensor.quat_w_world, origin="world", target="ros")
     # return sensor.quat_w_world.clone()
 
 def low_level_actions(env: BaseEnv) -> torch.Tensor:
